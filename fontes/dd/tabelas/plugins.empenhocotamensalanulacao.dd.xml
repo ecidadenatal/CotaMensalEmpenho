@@ -1,0 +1,62 @@
+<?xml version="1.0" standalone="yes" ?>
+<table name="plugins.empenhocotamensalanulacao" description="Contém os dados da anulação de uma cota." prefix="" label="Anulação de cota." type="0">
+  <fields>
+    <field name="sequencial"
+           conteudo="int4"
+           description="Sequencial"
+           inivalue="0"
+           label="Sequencial"
+           size="10"
+           null="f"
+           uppercase="f"
+           autocompl="f"
+           aceitatipo="1"
+           tipoobj="text"
+           labelrel="Sequencial"
+           reference=""
+           ispk="t"
+           hassequence="t">
+      <sequence name="plugins.empenhocotamensalanulacao_sequencial_seq"></sequence>
+    </field>
+    <field name="empenhocotamensal"
+           conteudo="int4"
+           description="Cota mensal de empenho"
+           inivalue="0"
+           label="Cota mensal de empenho"
+           size="10"
+           null="f"
+           uppercase="f"
+           autocompl="f"
+           aceitatipo="1"
+           tipoobj="text"
+           labelrel="Cota mensal de empenho"
+           reference=""
+           ispk="f"
+           hassequence="f">
+    </field>
+    <field name="valoranulado"
+           conteudo="numeric"
+           description="Valor da anulacao"
+           inivalue="0"
+           label="Valor"
+           size="10"
+           null="f"
+           uppercase="f"
+           autocompl="f"
+           aceitatipo="4"
+           tipoobj="text"
+           labelrel="Valor"
+           reference=""
+           ispk="f"
+           hassequence="f">
+    </field>
+  </fields>
+  <primarykey>
+    <fieldpk name="sequencial"></fieldpk>
+  </primarykey>
+  <foreignkeys>
+    <foreignkey reference="empenhocotamensal" inner='true'>
+      <fieldfk name="empenhocotamensal" reference="e05_sequencial"></fieldfk>
+    </foreignkey>
+  </foreignkeys>
+</table>

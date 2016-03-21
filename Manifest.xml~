@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <plugin name="CotaMensalEmpenho" label="Cota Mensal Empenho" plugin-version="1.0" ecidade-version="2.3.39" id-modulo="398">
+   <id id="CotaMensalEmpenho"> </id>
+   <files>    
+
+    <!-- rpc -->
+      <file name="emp4_empenhocotamensalanulacao.RPC.php"    path="/emp4_empenhocotamensalanulacao.RPC.php" />
+
+    <!-- classe -->
+      <file name="db_empenhocotamensalanulacao_classe.php"    path="/classes/db_empenhocotamensalanulacao_classe.php" />
+
+    <!-- outro -->
+    <file name="CotaMensalEmpenho.xml"    path="/modification/xml/CotaMensalEmpenho.xml" />
+
+   </files>
+   <estrutura install="/instalacao.sql" uninstall="/desinstalacao.sql">
+   </estrutura>
+  </plugin>
+</manifest>    

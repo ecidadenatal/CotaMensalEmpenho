@@ -31,17 +31,20 @@ class cl_empenhocotamensalanulacao extends DAOBasica {
     parent::__construct("plugins.empenhocotamensalanulacao");
   }
 
-  public function sql_query_geral($sCampos = "*", $sWhere = null) {
+  public function sql_query_geral($sCampos = "*", $sWhere = "", $sOrder = "") {
 
     $sSqlBusca  = "  select {$sCampos} ";
     $sSqlBusca .= "    from empenhocotamensal ";
     $sSqlBusca .= "          left join plugins.empenhocotamensalanulacao on empenhocotamensal = e05_sequencial ";
     $sSqlBusca .= "         inner join empempenho        		 		 on e60_numemp        = e05_numemp ";
 
-    if (!empty($sWhere)) {
+    if (!empty($sWhere) && $sWhere != "") {
       $sSqlBusca .= " where {$sWhere} ";
     }
-    $sSqlBusca .= "order by e05_mes";
+
+    if (!empty($sOrder) && $sOrder != "") {
+      $sSqlBusca .= " order by {$sOrder} ";
+    }
     return $sSqlBusca;
   }
 

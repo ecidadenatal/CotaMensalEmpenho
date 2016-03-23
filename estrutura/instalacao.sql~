@@ -1,4 +1,4 @@
 create table plugins.empenhocotamensalanulacao (sequencial        serial  not null primary key ,
                                                 empenhocotamensal integer not null,
-                                                valoranulado      numeric not null default 0,
-                                                constraint empenhocotamensal_sequencial_fk foreign key (empenhocotamensal) references empenhocotamensal);
+                                                valoranulado      double precision not null);
+

@@ -25,15 +25,15 @@
  *                                licenca/licenca_pt.txt
  */
 
-require_once("dbforms/db_funcoes.php");
-require_once("libs/JSON.php");
-require_once("libs/db_stdlib.php");
-require_once("libs/db_utils.php");
-require_once("libs/db_app.utils.php");
-require_once("libs/db_conecta.php");
-require_once("libs/db_sessoes.php");
-require_once("std/db_stdClass.php");
-require_once("classes/db_empenhocotamensalanulacao_classe.php");
+require_once(modification("dbforms/db_funcoes.php"));
+require_once(modification("libs/JSON.php"));
+require_once(modification("libs/db_stdlib.php"));
+require_once(modification("libs/db_utils.php"));
+require_once(modification("libs/db_app.utils.php"));
+require_once(modification("libs/db_conecta_plugin.php"));
+require_once(modification("libs/db_sessoes.php"));
+require_once(modification("std/db_stdClass.php"));
+require_once(modification("classes/db_empenhocotamensalanulacao_classe.php"));
 
 $json               = new services_json();
 $oParam             = $json->decode(str_replace("\\","",$_POST["json"]));
@@ -102,10 +102,11 @@ switch ($oParam->method) {
         if ($oEmpenhoCotaMensalAnulacao->numrows > 0) {
 
           $oEmpenhoCotaMensalAnulacao->empenhocotamensal = $oCotaMensal->e05_sequencial;
-          $oEmpenhoCotaMensalAnulacao->valoranulado      = (float)$oCota->valor > 0 ? (float)$oCota->valor : 0;
+          $oEmpenhoCotaMensalAnulacao->valoranulado      = $oCotaMensalAnulacao->valoranulado + ((float)$oCota->valor > 0 ? (float)$oCota->valor : 0);
           $oEmpenhoCotaMensalAnulacao->alterar($oCotaMensalAnulacao->sequencial);
           
           if ($oEmpenhoCotaMensalAnulacao->erro_status == 0) {
+            $oRetorno->status   = 0;
             $oRetorno->mensagem = $oEmpenhoCotaMensalAnulacao->erro_sql;
             throw new Exception("Erro ao alterar registro.", 1);            
           }
@@ -115,8 +116,10 @@ switch ($oParam->method) {
           $oCotaAnulacao->empenhocotamensal = $oCotaMensal->e05_sequencial;
           $oCotaAnulacao->valoranulado      = $oCota->valor ? $oCota->valor : 0;
           $oCotaAnulacao->incluir(null);
-          echo "\n".$oEmpenhoCotaMensalAnulacao->erro_sql;
+          
           if ($oCotaAnulacao->erro_status == 0) {
+            $oRetorno->status   = 0;
+            $oRetorno->mensagem = $oCotaAnulacao->erro_sql;
             throw new Exception("Erro ao inserir registro. ".$oCotaAnulacao->erro_msg, 1);            
           }
         }
@@ -125,8 +128,10 @@ switch ($oParam->method) {
       if ($oEmpenhoCotaMensalAnulacao->erro_status == 0) {
         throw new DBException("ERRO [ 1 ] - Incluindo detalhe - " .  $oEmpenhoCotaMensalAnulacao->erro_msg);
       }    
+      
       $oRetorno->mensagem = 'Anulação de Cotas salva com sucesso.';
-      break;
+      echo $json->encode($oRetorno);
+    break;
   }
 
 $oRetorno->mensagem = urlencode($oRetorno->mensagem);

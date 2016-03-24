@@ -77,7 +77,7 @@
     var nValorAutEmp = js_formatar(document.getElementById('e54_valor').value, 'f');
 
     if (nValorTotal != nValorAutEmp) {
-      alert("A soma das cotas deve ser igual ao valor da autorização."+nValorTotal+"-"+nValorAutEmp);
+      alert("A soma das cotas deve ser igual ao valor da autorização.");
       return false;
     }
     return true;
@@ -89,15 +89,14 @@
   	//Só verifica as cotas dos meses seguintes
   	for (var i = mesAtual; i <= 12; i++) {
     	if (document.getElementById('e54_codtipo').value == 1){
-        	document.getElementById('cota_'+i).disabled 	= true;
-    		atualizarTotal();
-      	} else {
-      		document.getElementById('cota_'+i).disabled 	= false;
-    		atualizarTotal();
-      	}
-		document.getElementById('cota_'+i).value 		= 0;
+        document.getElementById('cota_'+i).disabled 	= true;
+      } else {
+      	document.getElementById('cota_'+i).disabled 	= false;
+      }
+		  document.getElementById('cota_'+i).value 		= 0;
     }
-	document.getElementById('cota_'+mesAtual).value = nValor;
+	  document.getElementById('cota_'+mesAtual).value = nValor;
+    atualizarTotal();
   }
 
   function verificaCotasMes(){

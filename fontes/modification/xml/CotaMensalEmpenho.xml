@@ -89,9 +89,11 @@
   	//Só verifica as cotas dos meses seguintes
   	for (var i = mesAtual; i <= 12; i++) {
     	if (document.getElementById('e54_codtipo').value == 1){
-        document.getElementById('cota_'+i).disabled 	= true;
+        document.getElementById('cota_'+i).readOnly   = true;
+        document.getElementById('cota_'+i).style.backgroundColor = "gray";
       } else {
-      	document.getElementById('cota_'+i).disabled 	= false;
+        document.getElementById('cota_'+i).readOnly   = false;
+        document.getElementById('cota_'+i).style.backgroundColor = "white";
       }
 		  document.getElementById('cota_'+i).value 		= 0;
     }
@@ -104,7 +106,8 @@
   	var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
   	for (var i = 1; i <= 12; i++) {
 		if (i < mesAtual){
-	   		document.getElementById('cota_'+i).disabled = true;
+        document.getElementById('cota_'+i).readOnly   = true;
+        document.getElementById('cota_'+i).style.backgroundColor = "gray";
 	  	}
 	  	document.getElementById('cota_'+i).value 		= 0;
    	}
@@ -405,6 +408,89 @@
     }
 
     $oEmpenho->adicionarCotas($aCotas);]]>
+      </add>
+    </operation>
+  </file>
+
+  <file path='emp1_empautoriza004.php'>
+    <operation>
+      <search><![CDATA[$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }]]></search>
+      <add position="replace">
+        <![CDATA[if (!$sqlerro) {
+
+    $oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }
+  }]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search><![CDATA[$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }]]></search>
+      <add position="replace">
+        <![CDATA[if (!$sqlerro) {
+
+    $oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }
+  }]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search><![CDATA[if(isset($incluir) && $clempautoriza->erro_campo!=""){
+      echo "<script> document.form1.".$clempautoriza->erro_campo.".style.backgroundColor='#99A9AE';</script>";
+      echo "<script> document.form1.".$clempautoriza->erro_campo.".focus();</script>";]]></search>
+      <add position="replace">
+        <![CDATA[if(isset($incluir) && $clempautoriza->erro_campo!=""||$oDaoEmpenhoProcessoAdminitrativo->erro_campo!=""){
+      echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".style.backgroundColor='#99A9AE';</script>";
+      echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".focus();</script>";]]>
+      </add>
+    </operation>
+  </file>
+  
+  <file path='classes/db_empautorizaprocesso_classe.php'>
+    <operation>
+      <search><![CDATA[/* Plugin Empenho Cota Mensal - Parte 1 */]]></search>
+      <add position="after">
+        <![CDATA[
+     if($this->e150_numeroprocesso == null ){ 
+       $this->erro_sql = " Campo Processo Administrativo (PA) nao Informado.";
+       $this->erro_campo = "e150_numeroprocesso";
+       $this->erro_banco = "";
+       $this->erro_msg   = "Usuário: \\n\\n ".$this->erro_sql." \\n\\n";
+       $this->erro_msg   .=  str_replace('"',"",str_replace("'","",  "Administrador: \\n\\n ".$this->erro_banco." \\n"));
+       $this->erro_status = "0";
+       return false;
+     }]]>
       </add>
     </operation>
   </file>

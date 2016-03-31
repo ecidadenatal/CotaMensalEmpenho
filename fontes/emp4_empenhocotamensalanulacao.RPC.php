@@ -51,7 +51,18 @@ switch ($oParam->method) {
     case 'getCotasMensaisAnulacao' :
 
       $oEmpenhoCotaMensalAnulacao = new cl_empenhocotamensalanulacao();
-      $sSqlSaldoAnterior = $oEmpenhoCotaMensalAnulacao->sql_query_geral("(sum(e05_valor) - sum(coalesce(valoranulado, 0)))", "e05_mes <= ".date('m',db_getsession('DB_datausu'))." and e05_numemp = $oParam->iEmpenho");
+
+      $sSqlTotalLiquidadoAnterior = "select coalesce(sum(e70_vlrliq), 0) 
+                                from empnotaele 
+                                    inner join empnota on e69_codnota = e70_codnota 
+                                where e69_numemp = $oParam->iEmpenho and extract(month from e69_dtnota) <= ".date('m',db_getsession('DB_datausu'));
+
+      $sSqlTotalLiquidadoMes = "select coalesce(sum(e70_vlrliq), 0) 
+                                from empnotaele 
+                                    inner join empnota on e69_codnota = e70_codnota 
+                                where e69_numemp = $oParam->iEmpenho and extract(month from e69_dtnota) = e05_mes";
+
+      $sSqlSaldoAnterior = $oEmpenhoCotaMensalAnulacao->sql_query_geral("(sum(e05_valor) - ($sSqlTotalLiquidadoAnterior) - sum(coalesce(valoranulado, 0)))", "e05_mes <= ".date('m',db_getsession('DB_datausu'))." and e05_numemp = $oParam->iEmpenho");
 
       $sCampos     = "e05_sequencial, ";
       $sCampos    .= "e05_mes,";
@@ -60,7 +71,7 @@ switch ($oParam->method) {
       $sCampos    .= " (case 
                           when e05_mes < ".date('m',db_getsession('DB_datausu'))." then 0
                           when e05_mes = ".date('m',db_getsession('DB_datausu'))." then ($sSqlSaldoAnterior)
-                          else e05_valor-coalesce(valoranulado, 0) 
+                          else e05_valor-($sSqlTotalLiquidadoMes)-coalesce(valoranulado, 0) 
                         end) as saldocota";
       $sSqlCotaAnu = $oEmpenhoCotaMensalAnulacao->sql_query_geral($sCampos, "e05_numemp = $oParam->iEmpenho", "e05_mes");
       $rsCotasAnu  = $oEmpenhoCotaMensalAnulacao->sql_record($sSqlCotaAnu);

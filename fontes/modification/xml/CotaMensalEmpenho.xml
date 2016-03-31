@@ -266,21 +266,19 @@
   //realiza as validações necessarias para salvar
   function validarCotas() {
 
-    var sValorTotal = document.getElementById('total_cotas').innerHTML.replace(".", "");//.replace(/[.,]/g, ""));
-    var nValorTotal = parseFloat(sValorTotal.replace(",", "."));    
+    var sValorTotal = document.getElementById('total_cotas').innerHTML.replace(/[.]/g, "");//.replace(/[.,]/g, ""));
+    var nValorTotal = parseFloat(sValorTotal.replace(",", ".")).toFixed(2);    
 
-    var sValorAnu   = document.getElementById('valortotal').innerHTML.replace(".", "");
-    var nValorAnu   = parseFloat(sValorAnu.replace(",", "."));
+    var sValorAnu   = document.getElementById('valortotal').innerHTML.replace(/[.]/g, "");
+    var nValorAnu   = parseFloat(sValorAnu.replace(",", ".")).toFixed(2);
 
     for (var i = 1; i <= 12; i++) {
-      /*var sValorCota  = document.getElementById('cota_'+i).value.replace(".", "");
-      var nValorCota  = parseFloat(sValorCota.replace(",", "."));*/
 
-      /*var sValorSaldo = document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", "");
-      var nValorSaldo = parseFloat(sValorSaldo.replace(",", "."));*/
+      var sValorCota   = document.getElementById('cota_'+i).value.replace(/[.]/g,"").replace(",",".");
+      var nValorCota   = parseFloat(sValorCota).toFixed(2);
 
-      var nValorCota   = js_formatar(document.getElementById('cota_'+i).value, 'f');
-      var nValorSaldo  = js_formatar(document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", ""), 'f');
+      var sValorSaldo  = document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", "").replace(/[.]/g,"").replace(",",".");
+      var nValorSaldo  = parseFloat(sValorSaldo).toFixed(2);
 
       if (nValorCota > nValorSaldo) {
         alert("O valor da cota do mês "+i+" não pode ser maior que o saldo da cota disponível para anulação.");

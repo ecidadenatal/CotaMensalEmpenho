@@ -273,11 +273,14 @@
     var nValorAnu   = parseFloat(sValorAnu.replace(",", "."));
 
     for (var i = 1; i <= 12; i++) {
-      var sValorCota  = document.getElementById('cota_'+i).value.replace(".", "");
-      var nValorCota  = parseFloat(sValorCota.replace(",", "."));
+      /*var sValorCota  = document.getElementById('cota_'+i).value.replace(".", "");
+      var nValorCota  = parseFloat(sValorCota.replace(",", "."));*/
 
-      var sValorSaldo = document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", "").replace(".", "");
-      var nValorSaldo = parseFloat(sValorSaldo.replace(",", "."));
+      /*var sValorSaldo = document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", "");
+      var nValorSaldo = parseFloat(sValorSaldo.replace(",", "."));*/
+
+      var nValorCota   = js_formatar(document.getElementById('cota_'+i).value, 'f');
+      var nValorSaldo  = js_formatar(document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", ""), 'f');
 
       if (nValorCota > nValorSaldo) {
         alert("O valor da cota do mês "+i+" não pode ser maior que o saldo da cota disponível para anulação.");

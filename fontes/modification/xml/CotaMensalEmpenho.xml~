@@ -6,6 +6,13 @@
   
   <file path='forms/db_frmempempenhonota.php'>
     <operation>
+      <search><![CDATA[<input type="button" id="btnLancarCotasMensais" value="Manutenção das Cotas Mensais" onclick="manutencaoCotasMensais();" <?php echo $lDisable; ?> />]]></search>
+      <add position="replace">
+        <![CDATA[]]>
+      </add>
+    </operation>
+
+    <operation>
       <search><![CDATA[<!-- Plugin - Cotas mensais no empenho - Parte 1 -->]]></search>
       <add position="after">
         <![CDATA[      <fieldset>
@@ -70,7 +77,7 @@
     var nValorAutEmp = js_formatar(document.getElementById('e54_valor').value, 'f');
 
     if (nValorTotal != nValorAutEmp) {
-      alert("A soma das cotas deve ser igual ao valor da autorização."+nValorTotal+"-"+nValorAutEmp);
+      alert("A soma das cotas deve ser igual ao valor da autorização.");
       return false;
     }
     return true;
@@ -82,15 +89,16 @@
   	//Só verifica as cotas dos meses seguintes
   	for (var i = mesAtual; i <= 12; i++) {
     	if (document.getElementById('e54_codtipo').value == 1){
-        	document.getElementById('cota_'+i).disabled 	= true;
-    		atualizarTotal();
-      	} else {
-      		document.getElementById('cota_'+i).disabled 	= false;
-    		atualizarTotal();
-      	}
-		document.getElementById('cota_'+i).value 		= 0;
+        document.getElementById('cota_'+i).readOnly   = true;
+        document.getElementById('cota_'+i).style.backgroundColor = "gray";
+      } else {
+        document.getElementById('cota_'+i).readOnly   = false;
+        document.getElementById('cota_'+i).style.backgroundColor = "white";
+      }
+		  document.getElementById('cota_'+i).value 		= 0;
     }
-	document.getElementById('cota_'+mesAtual).value = nValor;
+	  document.getElementById('cota_'+mesAtual).value = nValor;
+    atualizarTotal();
   }
 
   function verificaCotasMes(){
@@ -98,7 +106,8 @@
   	var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
   	for (var i = 1; i <= 12; i++) {
 		if (i < mesAtual){
-	   		document.getElementById('cota_'+i).disabled = true;
+        document.getElementById('cota_'+i).readOnly   = true;
+        document.getElementById('cota_'+i).style.backgroundColor = "gray";
 	  	}
 	  	document.getElementById('cota_'+i).value 		= 0;
    	}
@@ -136,7 +145,8 @@
     <operation>
       <search><![CDATA[<!-- Plugin Cota Mensal Empenho - Parte 1 -->]]></search>
       <add position="after">
-        <![CDATA[</td>
+        <![CDATA[
+      </td>
           </tr>
           <tr>
             <td>
@@ -195,7 +205,8 @@
     <operation>
       <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 2 */]]></search>
       <add position="after">
-        <![CDATA[  //Traz os dados das cotas (no momento só utiliza o saldo disponível para anular)
+        <![CDATA[  
+  //Traz os dados das cotas (no momento só utiliza o saldo disponível para anular)
   function carregarCotasEmpenho(iEmpenho) {
     js_divCarregando("Aguarde, carregando dados das cotas","msgBox");
     strJson = '{"method":"getCotasMensaisAnulacao","pars":"'+iEmpenho+'","iEmpenho":"'+iEmpenho+'"}';
@@ -255,22 +266,30 @@
   //realiza as validações necessarias para salvar
   function validarCotas() {
 
-    var nValorTotal  = js_formatar(document.getElementById('total_cotas').innerHTML, 'f');
-    var nValorAnu    = js_formatar(document.getElementById('valortotal').value, 'f');
+    var sValorTotal = document.getElementById('total_cotas').innerHTML.replace(".", "");//.replace(/[.,]/g, ""));
+    var nValorTotal = parseFloat(sValorTotal.replace(",", "."));    
+
+    var sValorAnu   = document.getElementById('valortotal').innerHTML.replace(".", "");
+    var nValorAnu   = parseFloat(sValorAnu.replace(",", "."));
 
     for (var i = 1; i <= 12; i++) {
-      nValorCota  = js_strToFloat(document.getElementById('cota_'+i).value);
-      nValorSaldo = js_strToFloat(document.getElementById('disponivel_cota_'+i).innerHTML);
+      var sValorCota  = document.getElementById('cota_'+i).value.replace(".", "");
+      var nValorCota  = parseFloat(sValorCota.replace(",", "."));
+
+      var sValorSaldo = document.getElementById('disponivel_cota_'+i).innerHTML.replace("Disp.: ", "").replace(".", "");
+      var nValorSaldo = parseFloat(sValorSaldo.replace(",", "."));
+
       if (nValorCota > nValorSaldo) {
-        alert("O valor da cota do mês "+i+" não pode ser maior que o saldo disponível para anulação.");
+        alert("O valor da cota do mês "+i+" não pode ser maior que o saldo da cota disponível para anulação.");
         return false;
       }
     }
 
     if (nValorTotal != nValorAnu) {
-      alert("A soma das cotas deve ser igual ao valor da anulação."+nValorTotal+"-"+nValorAnu);
+      alert("A soma das cotas deve ser igual ao valor da anulação.");
       return false;
     }
+
     return true;
   }
 
@@ -282,7 +301,6 @@
   }
 
   js_divCarregando("Aguarde, carregando dados das cotas","msgBox");
-
   var aCotas = new Array();
   for (var i = 1; i <= 12; i++) {
     var oCotasAnulacao = new Object();
@@ -310,8 +328,17 @@
   function js_saidaSalvaCotas(oAjax) {
   
     js_removeObj("msgBox");
-    verificaCotasMes();
-    return true;
+    obj = eval("("+oAjax.responseText+")");
+
+    if (obj.status == 1){
+      verificaCotasMes();
+      alert(obj.mensagem);
+      return true;
+    } else {
+      alert("Não foi possível inserir as anulações das cotas.");
+      alert(obj.mensagem);
+      return false;
+    }
   }
 
   //bloqueia as cotas de meses anteriores
@@ -336,14 +363,134 @@
     <operation>
       <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 3 */]]></search>
       <add position="after">
-        <![CDATA[    carregarCotasEmpenho(chave);]]>
+        <![CDATA[
+    carregarCotasEmpenho(obj.e60_numemp);]]>
       </add>
     </operation>
 
     <operation>
       <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 4 */]]></search>
       <add position="after">
-        <![CDATA[      salvarAnulacoesCotas($F('e60_numemp'));]]>
+        <![CDATA[
+      if(salvarAnulacoesCotas($F('e60_numemp')) == false) {
+        return false;
+      }]]>
+      </add>
+    </operation>
+  </file>
+
+  <file path='forms/db_frmempempenhoaltera.php'>
+    <operation>
+      <search><![CDATA[<input type="button" id="btnLancarCotasMensais" value="Manutenção de Cotas Mensais" onclick="manutencaoCotasMensais()" />]]></search>
+      <add position="replace">
+        <![CDATA[]]>
+      </add>
+    </operation>
+  </file>
+
+  <file path='emp4_empempenho004.php'>
+    <operation>
+      <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 1 */]]></search>
+      <add position="after">
+        <![CDATA[
+    require_once(modification('model/empenho/EmpenhoFinanceiroRepository.model.php'));
+    require_once(modification('model/empenho/EmpenhoFinanceiro.model.php'));
+    require_once(modification('model/empenho/EmpenhoCotaMensal.model.php'));
+
+    $oEmpenho = EmpenhoFinanceiroRepository::getEmpenhoFinanceiroPorNumero($e60_numemp);
+    $aCotas = array();
+    for ($mes=1; $mes <= 12; $mes++) { 
+      $nValor = str_replace(".", "", ${"cota_".$mes});
+      $oCotaMensal = new EmpenhoCotaMensal();
+      $oCotaMensal->setMes($mes);
+      $oCotaMensal->setValor((float)str_replace(",", ".", $nValor));
+      $aCotas[] = $oCotaMensal;
+    }
+
+    $oEmpenho->adicionarCotas($aCotas);]]>
+      </add>
+    </operation>
+  </file>
+
+  <file path='emp1_empautoriza004.php'>
+    <operation>
+      <search><![CDATA[$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }]]></search>
+      <add position="replace">
+        <![CDATA[if (!$sqlerro) {
+
+    $oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }
+  }]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search><![CDATA[$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }]]></search>
+      <add position="replace">
+        <![CDATA[if (!$sqlerro) {
+
+    $oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
+    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
+    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
+
+    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
+
+      $sqlerro  = true;
+      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
+    }
+  }]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search><![CDATA[if(isset($incluir) && $clempautoriza->erro_campo!=""){
+      echo "<script> document.form1.".$clempautoriza->erro_campo.".style.backgroundColor='#99A9AE';</script>";
+      echo "<script> document.form1.".$clempautoriza->erro_campo.".focus();</script>";]]></search>
+      <add position="replace">
+        <![CDATA[if(isset($incluir) && $clempautoriza->erro_campo!=""||$oDaoEmpenhoProcessoAdminitrativo->erro_campo!=""){
+      echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".style.backgroundColor='#99A9AE';</script>";
+      echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".focus();</script>";]]>
+      </add>
+    </operation>
+  </file>
+  
+  <file path='classes/db_empautorizaprocesso_classe.php'>
+    <operation>
+      <search><![CDATA[/* Plugin Empenho Cota Mensal - Parte 1 */]]></search>
+      <add position="after">
+        <![CDATA[
+     if($this->e150_numeroprocesso == null ){ 
+       $this->erro_sql = " Campo Processo Administrativo (PA) nao Informado.";
+       $this->erro_campo = "e150_numeroprocesso";
+       $this->erro_banco = "";
+       $this->erro_msg   = "Usuário: \\n\\n ".$this->erro_sql." \\n\\n";
+       $this->erro_msg   .=  str_replace('"',"",str_replace("'","",  "Administrador: \\n\\n ".$this->erro_banco." \\n"));
+       $this->erro_status = "0";
+       return false;
+     }]]>
       </add>
     </operation>
   </file>

@@ -84,40 +84,40 @@
   }
 
   function validarCotasTipoEmp() {
-  	var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
-  	var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
-  	//Só verifica as cotas dos meses seguintes
-  	for (var i = mesAtual; i <= 12; i++) {
-    	if (document.getElementById('e54_codtipo').value == 1){
+    var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
+    var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
+    //Só verifica as cotas dos meses seguintes
+    for (var i = mesAtual; i <= 12; i++) {
+      if (document.getElementById('e54_codtipo').value == 1){
         document.getElementById('cota_'+i).readOnly   = true;
         document.getElementById('cota_'+i).style.backgroundColor = "gray";
       } else {
         document.getElementById('cota_'+i).readOnly   = false;
         document.getElementById('cota_'+i).style.backgroundColor = "white";
       }
-		  document.getElementById('cota_'+i).value 		= 0;
+      document.getElementById('cota_'+i).value    = 0;
     }
-	  document.getElementById('cota_'+mesAtual).value = nValor;
+    document.getElementById('cota_'+mesAtual).value = nValor;
     atualizarTotal();
   }
 
   function verificaCotasMes(){
-  	var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
-  	var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
-  	for (var i = 1; i <= 12; i++) {
-		if (i < mesAtual){
+    var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
+    var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
+    for (var i = 1; i <= 12; i++) {
+    if (i < mesAtual){
         document.getElementById('cota_'+i).readOnly   = true;
         document.getElementById('cota_'+i).style.backgroundColor = "gray";
-	  	}
-	  	document.getElementById('cota_'+i).value 		= 0;
-   	}
-	document.getElementById('cota_'+mesAtual).value = nValor;
+      }
+      document.getElementById('cota_'+i).value    = 0;
+    }
+  document.getElementById('cota_'+mesAtual).value = nValor;
   }
 
   document.observe("dom:loaded", function() {
-  	verificaCotasMes();
+    verificaCotasMes();
         validarCotasTipoEmp();
-  	atualizarTotal();
+    atualizarTotal();
   })]]>
       </add>
     </operation>
@@ -191,9 +191,8 @@
                       </tr>
                       <tr>
                         <td></td><td></td>
-                        <td></td><td></td>
                         <td></td><td><? db_input('e54_valor', 10, $Ie54_valor, true, 'hidden') ?></td>
-                        <td nowrap><b>Total de anulação das Cotas: <b></td><td nowrap align="right"><b id='total_cotas'>0,00</b></td>
+                        <td nowrap colspan="3"><b>Total de anulação das Cotas: <b></td><td nowrap align="right"><b id='total_cotas'>0,00</b></td>
                       </tr>
                     </table>
                 </fieldset>
@@ -394,21 +393,23 @@
       <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 1 */]]></search>
       <add position="after">
         <![CDATA[
-    require_once(modification('model/empenho/EmpenhoFinanceiroRepository.model.php'));
-    require_once(modification('model/empenho/EmpenhoFinanceiro.model.php'));
-    require_once(modification('model/empenho/EmpenhoCotaMensal.model.php'));
+    if(!$sqlerro) {
+      require_once(modification('model/empenho/EmpenhoFinanceiroRepository.model.php'));
+      require_once(modification('model/empenho/EmpenhoFinanceiro.model.php'));
+      require_once(modification('model/empenho/EmpenhoCotaMensal.model.php'));
 
-    $oEmpenho = EmpenhoFinanceiroRepository::getEmpenhoFinanceiroPorNumero($e60_numemp);
-    $aCotas = array();
-    for ($mes=1; $mes <= 12; $mes++) { 
-      $nValor = str_replace(".", "", ${"cota_".$mes});
-      $oCotaMensal = new EmpenhoCotaMensal();
-      $oCotaMensal->setMes($mes);
-      $oCotaMensal->setValor((float)str_replace(",", ".", $nValor));
-      $aCotas[] = $oCotaMensal;
-    }
+      $oEmpenho = EmpenhoFinanceiroRepository::getEmpenhoFinanceiroPorNumero($e60_numemp);
+      $aCotas = array();
+      for ($mes=1; $mes <= 12; $mes++) { 
+        $nValor = str_replace(".", "", ${"cota_".$mes});
+        $oCotaMensal = new EmpenhoCotaMensal();
+        $oCotaMensal->setMes($mes);
+        $oCotaMensal->setValor((float)str_replace(",", ".", $nValor));
+        $aCotas[] = $oCotaMensal;
+      }
 
-    $oEmpenho->adicionarCotas($aCotas);]]>
+      $oEmpenho->adicionarCotas($aCotas);
+    }]]>
       </add>
     </operation>
   </file>

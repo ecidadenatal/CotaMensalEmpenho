@@ -1,4 +1,0 @@
-create table plugins.empenhocotamensalanulacao (sequencial        serial  not null primary key ,
-                                                empenhocotamensal integer not null,
-                                                valoranulado      double precision not null);
-

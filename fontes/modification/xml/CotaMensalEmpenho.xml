@@ -377,6 +377,39 @@
       }]]>
       </add>
     </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(\<th.*Valor Total.*th\>)(\n.*\s*)(\<th.*Quantidade.*th\>)]]></search>
+      <add>
+        <![CDATA[$1
+                          <th class='table_header'>Saldo</th>
+                          $3
+        ]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(saida.*id='saldovlr.*e62_vlrtot.*\;)]]></search>
+      <add>
+        <![CDATA[$1
+        saida += "<td class='linhagrid' id='saldo_item"+obj.data[i].e62_sequen+"' style='text-align:right'>"+js_formatar(obj.data[i].saldo_item, 'f')+"</td>";]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(iSaldovlr.*'saldovlr'.*nSaldoVlrSolic.*\;)]]></search>
+      <add>
+        <![CDATA[$1
+    iSaldoItem     = ((js_strToFloat($('saldo_item'+id).innerHTML)));]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(if.*nVlrTotal.*<=.*iSaldovlr.*\{)]]></search>
+      <add>
+        <![CDATA[if ((nVlrTotal <= iSaldoItem)){]]>
+      </add>
+    </operation>
   </file>
 
   <file path='forms/db_frmempempenhoaltera.php'>
@@ -493,6 +526,35 @@
        $this->erro_status = "0";
        return false;
      }]]>
+      </add>
+    </operation>
+  </file>
+
+  <file path='classes/empenho.php'>
+    <operation>
+      <search regex="true"><![CDATA[(if.*objNotas->saldovalor(\n*.*\s*).*disabled.*(\n*.*\s*)\})]]></search>
+      <add>
+        <![CDATA[$1
+
+              //Valor utilizado para o cálculo do saldo. (Valor das ordens, anulação de ordens, e anulação de item)
+              $sqlSaldoItem = "select sum((coalesce(m52_valor, 0) - coalesce(m36_vrlanu, 0)) - coalesce(e37_vlranu, 0)) as valor
+                               from empempitem
+                                  left join matordemitem on m52_numemp = e62_numemp and m52_sequen = e62_sequen
+                                  left join matordemitemanu on m36_matordemitem = m52_codlanc
+                                  left join empanuladoitem  on e37_empempitem = e62_sequencial 
+                               where e62_sequencial = {$objNotas->e62_sequencial}";
+
+              $rsSaldoItem = db_query($sqlSaldoItem);
+              $nSaldoItem  = $objNotas->e62_vltot - db_utils::fieldsMemory($rsSaldoItem, 0)->valor;
+]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[("e62_vlrtot".*=>.*\$objNotas->saldovalor.*,)]]></search>
+      <add>
+        <![CDATA[$1
+                "saldo_item"        => $nSaldoItem,]]>
       </add>
     </operation>
   </file>

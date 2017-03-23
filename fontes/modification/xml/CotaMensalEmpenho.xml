@@ -6,16 +6,17 @@
   
   <file path='forms/db_frmempempenhonota.php'>
     <operation>
-      <search><![CDATA[<input type="button" id="btnLancarCotasMensais" value="Manutenção das Cotas Mensais" onclick="manutencaoCotasMensais();" <?php echo $lDisable; ?> />]]></search>
-      <add position="replace">
+      <search regex="true"><![CDATA[(<input.*id=('|")btnLancarCotasMensais('|").*onclick=('|")manutencaoCotasMensais\(.*\);('|").*>)]]></search>
+      <add>
         <![CDATA[]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[<!-- Plugin - Cotas mensais no empenho - Parte 1 -->]]></search>
-      <add position="after">
-        <![CDATA[      <fieldset>
+      <search regex="true"><![CDATA[(<table style=\"margin-top: 10px;\">)]]></search>
+      <add>
+        <![CDATA[
+       <fieldset>
         <legend>Cotas</legend>
           <table>
             <tr>
@@ -43,20 +44,16 @@
               <td nowrap><b>Total das Cotas: <b></td><td nowrap align="right"><b id='total_cotas'>0,00</b></td>
             </tr>
           </table>
-      </fieldset>]]>
+      </fieldset>
+      
+      $1]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[function manutencaoCotasMensais () {
-
-    oViewCotasMensais = new ViewCotasMensais('oViewCotasMensais', $F('e60_numemp'));
-    oViewCotasMensais.setReadOnly(false);
-    oViewCotasMensais.abrirJanela();
-  }]]></search>
-      <add position="replace">
-        <![CDATA[/* Plugin Cota mensal no empenho - Parte 2 */
-  function formatarValor(oObjeto) {
+      <search regex="true" flag="U"><![CDATA[function\s*manutencaoCotasMensais\s*\(.*\)\s*{((\n*.*)*)}]]></search>
+      <add>
+        <![CDATA[function formatarValor(oObjeto) {
 
     oObjeto.setValue(js_formatar(oObjeto.getValue(), 'f'));
     atualizarTotal();
@@ -84,67 +81,68 @@
   }
 
   function validarCotasTipoEmp() {
-    var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
-    var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
-    //Só verifica as cotas dos meses seguintes
-    for (var i = mesAtual; i <= 12; i++) {
-      if (document.getElementById('e54_codtipo').value == 1){
+  	var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
+  	var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
+  	//Só verifica as cotas dos meses seguintes
+  	for (var i = mesAtual; i <= 12; i++) {
+    	if (document.getElementById('e54_codtipo').value == 1){
         document.getElementById('cota_'+i).readOnly   = true;
         document.getElementById('cota_'+i).style.backgroundColor = "gray";
       } else {
         document.getElementById('cota_'+i).readOnly   = false;
         document.getElementById('cota_'+i).style.backgroundColor = "white";
       }
-      document.getElementById('cota_'+i).value    = 0;
+		  document.getElementById('cota_'+i).value 		= 0;
     }
-    document.getElementById('cota_'+mesAtual).value = nValor;
+	  document.getElementById('cota_'+mesAtual).value = nValor;
     atualizarTotal();
   }
 
   function verificaCotasMes(){
-    var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
-    var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
-    for (var i = 1; i <= 12; i++) {
-    if (i < mesAtual){
+  	var mesAtual = parseInt("<?php echo date('m',db_getsession('DB_datausu'))?>");
+  	var nValor   = js_formatar(document.getElementById('e54_valor').value, 'f');
+  	for (var i = 1; i <= 12; i++) {
+		if (i < mesAtual){
         document.getElementById('cota_'+i).readOnly   = true;
         document.getElementById('cota_'+i).style.backgroundColor = "gray";
-      }
-      document.getElementById('cota_'+i).value    = 0;
-    }
-  document.getElementById('cota_'+mesAtual).value = nValor;
+	  	}
+	  	document.getElementById('cota_'+i).value 		= 0;
+   	}
+	document.getElementById('cota_'+mesAtual).value = nValor;
   }
 
   document.observe("dom:loaded", function() {
     verificaCotasMes();
-        validarCotasTipoEmp();
+    validarCotasTipoEmp();
     atualizarTotal();
   })]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[/* Plugin Cota mensal no empenho - Parte 3 */]]></search>
-      <add position="after">
-        <![CDATA[    if(!validarCotas()){
+      <search regex="true"><![CDATA[(function\s*js_valida\(.*\)\s*{)]]></search>
+      <add>
+        <![CDATA[$1
+            
+    if(!validarCotas()){
       return false;
-    }]]>
+    }
+    ]]>
       </add>
     </operation>
-
+    
     <operation>
-      <search><![CDATA[/* Plugin Cota mensal no empenho - Parte 4 */
-            db_selectrecord("e54_codtipo",$result,true,$db_opcao);]]></search>
-      <add position="replace">
-        <![CDATA[/* Plugin Cota mensal no empenho - Parte 4 */
-            db_selectrecord("e54_codtipo",$result,true,$db_opcao,'','','','','validarCotasTipoEmp()');]]>
+      <search regex="true"><![CDATA[db_selectrecord\(('|")e54_codtipo('|"),.*\);]]></search>
+      <add>
+        <![CDATA[db_selectrecord("e54_codtipo",$result,true,$db_opcao,'','','','','validarCotasTipoEmp()');]]>
       </add>
     </operation>
   </file>
 
   <file path='forms/db_frmempanularempenho.php'>
     <operation>
-      <search><![CDATA[<!-- Plugin Cota Mensal Empenho - Parte 1 -->]]></search>
-      <add position="after">
+      <search regex="true"><![CDATA[(<\/table>\s*\n*<\/form>)]]></search>
+      <add>
         <![CDATA[
       </td>
           </tr>
@@ -197,13 +195,14 @@
                     </table>
                 </fieldset>
             </td>
-          </tr>]]>
+          </tr>
+        $1]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 2 */]]></search>
-      <add position="after">
+      <search regex="true"><![CDATA[(function\s*js_marcaLinha\(.*\)\s{)]]></search>
+      <add>
         <![CDATA[  
   //Traz os dados das cotas (no momento só utiliza o saldo disponível para anular)
   function carregarCotasEmpenho(iEmpenho) {
@@ -356,33 +355,71 @@
   document.observe("dom:loaded", function() {
     verificaCotasMes();
     atualizarTotal();
-  })]]>
+  })
+  
+  $1]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 3 */]]></search>
-      <add position="after">
-        <![CDATA[
+      <search regex="true" limit="1"><![CDATA[(lDisabled\s*=\s*('|")\s*('|")\s*;)]]></search>
+      <add>
+        <![CDATA[$1
+        
     carregarCotasEmpenho(obj.e60_numemp);]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 4 */]]></search>
-      <add position="after">
+      <search regex="true"><![CDATA[(if\s*\(\s*itensEmp\s*!=\s*('|")\s*('|")\s*\)\s*{)]]></search>
+      <add>
         <![CDATA[
       if(salvarAnulacoesCotas($F('e60_numemp')) == false) {
         return false;
-      }]]>
+      }
+      
+      $1]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(\<th.*Valor Total.*th\>)(\n.*\s*)(\<th.*Quantidade.*th\>)]]></search>
+      <add>
+        <![CDATA[$1
+                          <th class='table_header'>Saldo</th>
+                          $3
+        ]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(saida.*id='saldovlr.*e62_vlrtot.*\;)]]></search>
+      <add>
+        <![CDATA[$1
+        saida += "<td class='linhagrid' id='saldo_item"+obj.data[i].e62_sequen+"' style='text-align:right'>"+js_formatar(obj.data[i].saldo_item, 'f')+"</td>";]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(iSaldovlr.*'saldovlr'.*nSaldoVlrSolic.*\;)]]></search>
+      <add>
+        <![CDATA[$1
+    iSaldoItem     = ((js_strToFloat($('saldo_item'+id).innerHTML)));]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[(if.*nVlrTotal.*<=.*iSaldovlr.*\{)]]></search>
+      <add>
+        <![CDATA[if ((nVlrTotal <= iSaldoItem)){]]>
       </add>
     </operation>
   </file>
 
   <file path='forms/db_frmempempenhoaltera.php'>
     <operation>
-      <search><![CDATA[<input type="button" id="btnLancarCotasMensais" value="Manutenção de Cotas Mensais" onclick="manutencaoCotasMensais()" />]]></search>
-      <add position="replace">
+      <search regex="true"><![CDATA[(<input.*id="btnLancarCotasMensais".*>)]]></search>
+      <add>
         <![CDATA[]]>
       </add>
     </operation>
@@ -390,109 +427,101 @@
 
   <file path='emp4_empempenho004.php'>
     <operation>
-      <search><![CDATA[/* Plugin Cota Mensal Empenho - Parte 1 */]]></search>
-      <add position="after">
+      <search regex="true"><![CDATA[(\$oEmpenhoFinanceiro\s*=\s*null;)]]></search>
+      <add>
         <![CDATA[
     if(!$sqlerro) {
-      require_once(modification('model/empenho/EmpenhoFinanceiroRepository.model.php'));
-      require_once(modification('model/empenho/EmpenhoFinanceiro.model.php'));
-      require_once(modification('model/empenho/EmpenhoCotaMensal.model.php'));
+    require_once(modification('model/empenho/EmpenhoFinanceiroRepository.model.php'));
+    require_once(modification('model/empenho/EmpenhoFinanceiro.model.php'));
+    require_once(modification('model/empenho/EmpenhoCotaMensal.model.php'));
 
-      $oEmpenho = EmpenhoFinanceiroRepository::getEmpenhoFinanceiroPorNumero($e60_numemp);
-      $aCotas = array();
-      for ($mes=1; $mes <= 12; $mes++) { 
-        $nValor = str_replace(".", "", ${"cota_".$mes});
-        $oCotaMensal = new EmpenhoCotaMensal();
-        $oCotaMensal->setMes($mes);
-        $oCotaMensal->setValor((float)str_replace(",", ".", $nValor));
-        $aCotas[] = $oCotaMensal;
-      }
+    $oEmpenho = EmpenhoFinanceiroRepository::getEmpenhoFinanceiroPorNumero($e60_numemp);
+    $aCotas = array();
+    for ($mes=1; $mes <= 12; $mes++) { 
+      $nValor = str_replace(".", "", ${"cota_".$mes});
+      $oCotaMensal = new EmpenhoCotaMensal();
+      $oCotaMensal->setMes($mes);
+      $oCotaMensal->setValor((float)str_replace(",", ".", $nValor));
+      $aCotas[] = $oCotaMensal;
+    }
 
-      $oEmpenho->adicionarCotas($aCotas);
-    }]]>
+    $oEmpenho->adicionarCotas($aCotas);
+    }
+    $1]]>
       </add>
     </operation>
   </file>
 
   <file path='emp1_empautoriza004.php'>
     <operation>
-      <search><![CDATA[$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
-    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
-    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
-
-    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
-
-      $sqlerro  = true;
-      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
-    }]]></search>
-      <add position="replace">
+      <search regex="true" flag="U"><![CDATA[(\$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso\s*=\s*\$e150_numeroprocesso;((\n*.*)*)incluir\(null\);((\n*.*)*)})]]></search>
+      <add>
         <![CDATA[if (!$sqlerro) {
-
-    $oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
-    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
-    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
-
-    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
-
-      $sqlerro  = true;
-      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
-    }
-  }]]>
+      $1        
+    }]]>
       </add>
     </operation>
 
     <operation>
-      <search><![CDATA[$oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
-    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
-    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
-
-    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
-
-      $sqlerro  = true;
-      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
-    }]]></search>
-      <add position="replace">
-        <![CDATA[if (!$sqlerro) {
-
-    $oDaoEmpenhoProcessoAdminitrativo->e150_numeroprocesso = $e150_numeroprocesso;
-    $oDaoEmpenhoProcessoAdminitrativo->e150_empautoriza    = $e54_autori;
-    $oDaoEmpenhoProcessoAdminitrativo->incluir(null);
-
-    if ($oDaoEmpenhoProcessoAdminitrativo->erro_status == 0) {
-
-      $sqlerro  = true;
-      $erro_msg = $oDaoEmpenhoProcessoAdminitrativo->erro_msg;
-    }
-  }]]>
-      </add>
-    </operation>
-
-    <operation>
-      <search><![CDATA[if(isset($incluir) && $clempautoriza->erro_campo!=""){
-      echo "<script> document.form1.".$clempautoriza->erro_campo.".style.backgroundColor='#99A9AE';</script>";
-      echo "<script> document.form1.".$clempautoriza->erro_campo.".focus();</script>";]]></search>
-      <add position="replace">
+      <search regex="true" flag="U"><![CDATA[(if\(isset\(\$incluir\)\s*&&\s*\$clempautoriza->erro_campo\s*!=\s*('|")\s*('|")\s*\)\s*{((\n*.*)*)})]]></search>
+      <add>
         <![CDATA[if(isset($incluir) && $clempautoriza->erro_campo!=""||$oDaoEmpenhoProcessoAdminitrativo->erro_campo!=""){
       echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".style.backgroundColor='#99A9AE';</script>";
-      echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".focus();</script>";]]>
+      echo "<script> document.form1.".($clempautoriza->erro_campo!=""?$clempautoriza->erro_campo:$oDaoEmpenhoProcessoAdminitrativo->erro_campo).".focus();</script>";
+    }]]>
       </add>
     </operation>
   </file>
   
   <file path='classes/db_empautorizaprocesso_classe.php'>
     <operation>
-      <search><![CDATA[/* Plugin Empenho Cota Mensal - Parte 1 */]]></search>
-      <add position="after">
+      <search regex="true"><![CDATA[(if\s*\(\s*\$e150_sequencial\s*==\s*('|")\s*('|")\s*\|\|\s*\$e150_sequencial\s*==\s*null\s*\)\s*{)]]></search>
+      <add>
         <![CDATA[
      if($this->e150_numeroprocesso == null ){ 
        $this->erro_sql = " Campo Processo Administrativo (PA) nao Informado.";
        $this->erro_campo = "e150_numeroprocesso";
        $this->erro_banco = "";
-       $this->erro_msg   = "Usuário: \\n\\n ".$this->erro_sql." \\n\\n";
-       $this->erro_msg   .=  str_replace('"',"",str_replace("'","",  "Administrador: \\n\\n ".$this->erro_banco." \\n"));
+       $this->erro_msg   = "Usuário: \\\n\\\n ".$this->erro_sql." \\\n\\\n";
+       $this->erro_msg   .=  str_replace('"',"",str_replace("'","",  "Administrador: \\\n\\\n ".$this->erro_banco." \\\n"));
        $this->erro_status = "0";
        return false;
-     }]]>
+     }
+     
+     $1]]>
+      </add>
+    </operation>
+  </file>
+
+  <file path='classes/empenho.php'>
+    <operation>
+      <search regex="true"><![CDATA[(if.*objNotas->saldovalor(\n*.*\s*).*disabled.*(\n*.*\s*)\})]]></search>
+      <add>
+        <![CDATA[$1
+
+              $sqlSaldoItem = "select round((e62_vltot - 
+                                      (select coalesce(sum(m52_valor-coalesce(m36_vrlanu,0)),0) 
+                                         from matordemitem 
+                                              left join matordemitemanu on m36_matordemitem = m52_codlanc 
+                                        where m52_numemp = e62_numemp 
+                                          and m52_sequen = e62_sequen) -
+                                      (select coalesce(sum(e37_vlranu),0) 
+                                         from empanuladoitem 
+                                        where e37_empempitem = e62_sequencial)),2) as valor
+                                 from empempitem where e62_sequencial = {$objNotas->e62_sequencial}";
+
+              $rsSaldoItem = db_query($sqlSaldoItem);
+              $nSaldoItem  = db_utils::fieldsMemory($rsSaldoItem, 0)->valor;
+
+]]>
+      </add>
+    </operation>
+
+    <operation>
+      <search regex="true"><![CDATA[("e62_vlrtot".*=>.*\$objNotas->saldovalor.*,)]]></search>
+      <add>
+        <![CDATA[$1
+                "saldo_item"        => $nSaldoItem,]]>
       </add>
     </operation>
   </file>

@@ -55,12 +55,12 @@ switch ($oParam->method) {
       $sSqlTotalLiquidadoAnterior = "select coalesce(sum(e70_vlrliq), 0) 
                                 from empnotaele 
                                     inner join empnota on e69_codnota = e70_codnota 
-                                where e69_numemp = $oParam->iEmpenho and extract(month from e69_dtservidor) <= ".date('m',db_getsession('DB_datausu'));
+                                where e69_numemp = $oParam->iEmpenho and extract(month from e69_dtinclusao) <= ".date('m',db_getsession('DB_datausu'));
 
       $sSqlTotalLiquidadoMes = "select coalesce(sum(e70_vlrliq), 0) 
                                 from empnotaele 
                                     inner join empnota on e69_codnota = e70_codnota 
-                                where e69_numemp = $oParam->iEmpenho and extract(month from e69_dtservidor) = e05_mes";
+                                where e69_numemp = $oParam->iEmpenho and extract(month from e69_dtinclusao) = e05_mes";
 
       $sSqlSaldoAnterior = $oEmpenhoCotaMensalAnulacao->sql_query_geral("(sum(e05_valor) - ($sSqlTotalLiquidadoAnterior) - sum(coalesce(valoranulado, 0)))", "e05_mes <= ".date('m',db_getsession('DB_datausu'))." and e05_numemp = $oParam->iEmpenho");
 

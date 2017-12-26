@@ -371,50 +371,38 @@
     </operation>
 
     <operation>
-      <search regex="true"><![CDATA[(if\s*\(\s*itensEmp\s*!=\s*('|")\s*('|")\s*\)\s*{)]]></search>
+      <search regex="true" flag="U"><![CDATA[(var\s*sJson\s*=\s*'\{"method":"anularEmpenho"(\n*.*)*\$F\('e94_empanuladotipo'\)\+')\}';]]></search>
       <add>
         <![CDATA[
-      if(salvarAnulacoesCotas($F('e60_numemp')) == false) {
-        return false;
+      if (!validarCotas()) {
+    	return false;
+      }
+
+      var aCotas = new Array();
+      for (var i = 1; i <= 12; i++) {
+        var oCotasAnulacao = new Object();
+        nValorCota  = js_strToFloat(document.getElementById('cota_'+i).value); 
+        if (nValorCota > 0) {     
+          oCotasAnulacao.mes   = i;
+          oCotasAnulacao.valor = parseFloat(nValorCota);
+          aCotas.push(oCotasAnulacao);
+        }
       }
       
-      $1]]>
+      $1,"aCotas":'+js_objectToJson(aCotas)+'}';
+]]>
       </add>
     </operation>
-
+    
     <operation>
-      <search regex="true"><![CDATA[(\<th.*Valor Total.*th\>)(\n.*\s*)(\<th.*Quantidade.*th\>)]]></search>
+      <search regex="true"><![CDATA[(js_reset\(\);\n*.*js_pesquisa\(\);)]]></search>
       <add>
         <![CDATA[$1
-                          <th class='table_header'>Saldo</th>
-                          $3
-        ]]>
+      verificaCotasMes();
+      ]]>
       </add>
-    </operation>
-
-    <operation>
-      <search regex="true"><![CDATA[(saida.*id='saldovlr.*e62_vlrtot.*\;)]]></search>
-      <add>
-        <![CDATA[$1
-        saida += "<td class='linhagrid' id='saldo_item"+obj.data[i].e62_sequen+"' style='text-align:right'>"+js_formatar(obj.data[i].saldo_item, 'f')+"</td>";]]>
-      </add>
-    </operation>
-
-    <operation>
-      <search regex="true"><![CDATA[(iSaldovlr.*'saldovlr'.*nSaldoVlrSolic.*\;)]]></search>
-      <add>
-        <![CDATA[$1
-    iSaldoItem     = ((js_strToFloat($('saldo_item'+id).innerHTML)));]]>
-      </add>
-    </operation>
-
-    <operation>
-      <search regex="true"><![CDATA[(if.*nVlrTotal.*<=.*iSaldovlr.*\{)]]></search>
-      <add>
-        <![CDATA[if ((nVlrTotal <= iSaldoItem)){]]>
-      </add>
-    </operation>
-
+    </operation>    
+    
     <operation>
       <search regex="true"><![CDATA[(\<th.*Valor Total.*th\>)(\n.*\s*)(\<th.*Quantidade.*th\>)]]></search>
       <add>
@@ -449,6 +437,15 @@
     </operation>
   </file>
 
+  <file path='emp4_liquidacao004.php'>
+    <operation>
+      <search regex="true"><![CDATA[(\$objJson->iTipoAnulacao)]]></search>
+      <add>
+        <![CDATA[$1,true,$objJson->aCotas]]>
+      </add>
+    </operation>
+  </file>
+  
   <file path='forms/db_frmempempenhoaltera.php'>
     <operation>
       <search regex="true"><![CDATA[(<input.*id="btnLancarCotasMensais".*>)]]></search>
@@ -457,7 +454,7 @@
       </add>
     </operation>
   </file>
-
+  
   <file path='emp4_empempenho004.php'>
     <operation>
       <search regex="true"><![CDATA[(\$oEmpenhoFinanceiro\s*=\s*null;)]]></search>
@@ -557,35 +554,95 @@
                 "saldo_item"        => $nSaldoItem,]]>
       </add>
     </operation>
-  </file>
-
-  <file path='classes/empenho.php'>
+    
     <operation>
-      <search regex="true"><![CDATA[(if.*objNotas->saldovalor(\n*.*\s*).*disabled.*(\n*.*\s*)\})]]></search>
+      <search regex="true"><![CDATA[(\$lTransacao\s*=\s*true\)\s*\{)]]></search>
       <add>
-        <![CDATA[$1
-
-              //Valor utilizado para o cálculo do saldo. (Valor das ordens, anulação de ordens, e anulação de item)
-              $sqlSaldoItem = "select sum((coalesce(m52_valor, 0) - coalesce(m36_vrlanu, 0)) - coalesce(e37_vlranu, 0)) as valor
-                               from empempitem
-                                  left join matordemitem on m52_numemp = e62_numemp and m52_sequen = e62_sequen
-                                  left join matordemitemanu on m36_matordemitem = m52_codlanc
-                                  left join empanuladoitem  on e37_empempitem = e62_sequencial 
-                               where e62_sequencial = {$objNotas->e62_sequencial}";
-
-              $rsSaldoItem = db_query($sqlSaldoItem);
-              $nSaldoItem  = $objNotas->e62_vltot - db_utils::fieldsMemory($rsSaldoItem, 0)->valor;
-]]>
+        <![CDATA[$lTransacao = true, $aCotas = null) {]]>
       </add>
     </operation>
-
+    
     <operation>
-      <search regex="true"><![CDATA[("e62_vlrtot".*=>.*\$objNotas->saldovalor.*,)]]></search>
+      <search regex="true" flag="U"><![CDATA[(if\s*\(\$lTransacao\)\s*\{\n*.*\$this->sMsgErro\s*=.*\n*.*db_fim_transacao.*\n*.*}((\n*.*)*}))]]></search>
       <add>
-        <![CDATA[$1
-                "saldo_item"        => $nSaldoItem,]]>
+        <![CDATA[
+        if (!$this->lSqlErro) {
+        	
+        	$this->sErroMsg = "Anulação efetuada com sucesso.";
+        	
+            //inicio plugin
+            if (count($aCotas) > 0) {
+            	
+            	    foreach ($aCotas as $oCota) {
+            	    
+            	    	$oEmpenhoCotaMensal = new cl_empenhocotamensal();
+            	    	$oEmpenhoCotaMensalAnulacao = new cl_empenhocotamensalanulacao();
+            	    
+            	    	//pegar dados da cota mensal
+            	    	$sSqlCotaMensal     = $oEmpenhoCotaMensal->sql_query_file(null, "*", null, "e05_mes = $oCota->mes and e05_numemp = {$this->numemp}");
+            	    	$rsCotaMensal       = db_query($sSqlCotaMensal);
+            	    	$oCotaMensal        = db_utils::fieldsMemory($rsCotaMensal, 0);
+            	    
+            	    	//tentar obter dados de anulacao de cota
+            	    	$sSqlBuscaCotaMensalAnulacao = $oEmpenhoCotaMensalAnulacao->sql_query(null, "*",  null, "e05_sequencial = $oCotaMensal->e05_sequencial");
+            	    	$rsBuscaCotaMensalAnulacao   = $oEmpenhoCotaMensalAnulacao->sql_record($sSqlBuscaCotaMensalAnulacao);
+            	    	$oCotaMensalAnulacao = db_utils::fieldsMemory($rsBuscaCotaMensalAnulacao, 0);
+            	    
+            	    	//verificamos se o valor anulado é maior que o valor da cota
+            	    	$nTotalValorAnulado = $oCotaMensalAnulacao->valoranulado + ((float)$oCota->valor > 0 ? (float)$oCota->valor : 0);
+            	    	if ($nTotalValorAnulado > $oCotaMensal->e05_valor) {
+            	    		$this->lSqlErro = true;
+            	    		$this->sErroMsg = "Não há saldo para anulação na cota de ".db_mes($oCota->mes, 2)." \n\n";
+            	    		$this->sErroMsg .= "Cota : ". number_format($oCotaMensal->e05_valor, 2, ",", ".") ."\n"; 
+            	    		$this->sErroMsg .= "Total Anulado da Cota: ".number_format($oCotaMensalAnulacao->valoranulado, 2, ",", ".")."\n";
+            	    		$this->sErroMsg .= "Saldo cota: ".number_format(($oCotaMensal->e05_valor - $oCotaMensalAnulacao->valoranulado), 2, ",", ".")."\n";
+            	    		break;
+            	    	}
+            	    
+            	    	if (!$this->lSqlErro) {
+            	    	   //Se já tiver registro, altera. Se nao tiver, insere.
+            	    	   if ($oEmpenhoCotaMensalAnulacao->numrows > 0) {
+            	           
+            	    	   	 $oEmpenhoCotaMensalAnulacao->empenhocotamensal = $oCotaMensal->e05_sequencial;
+            	    	   	 $oEmpenhoCotaMensalAnulacao->valoranulado      = $oCotaMensalAnulacao->valoranulado + ((float)$oCota->valor > 0 ? (float)$oCota->valor : 0);
+            	    	   	 $oEmpenhoCotaMensalAnulacao->alterar($oCotaMensalAnulacao->sequencial);
+            	    	   	 if ($oEmpenhoCotaMensalAnulacao->erro_status == 0) {
+            	    	   	 	$this->lSqlErro = true;
+            	    	   	 	$this->sErroMsg = "Erro ao alterar valor anulado da cota";
+            	    	   	 	break;
+            	    	   	 }
+            	           
+            	    	   } else {
+            	           
+            	    	   	 $oCotaAnulacao = new cl_empenhocotamensalanulacao();
+            	    	   	 $oCotaAnulacao->empenhocotamensal = $oCotaMensal->e05_sequencial;
+            	    	   	 $oCotaAnulacao->valoranulado      = $oCota->valor ? $oCota->valor : 0;
+            	    	   	 $oCotaAnulacao->incluir(null);
+            	    	   	 if ($oCotaAnulacao->erro_status == 0) {
+            	    	   	 	$this->lSqlErro = true;
+            	    	   	 	$this->sErroMsg = "Erro ao inserir anulacao da cota";
+            	    	   	 	break;
+            	    	   	 }
+            	    	   	 
+            	    	   }
+            	    	}	   
+            	    
+            	    }
+            	
+            }
+            //fim plugin
+            
+            
+        }
+        
+        if ($lTransacao) {
+        	$this->sMsgErro = urlencode($this->sMsgErro);
+        	db_fim_transacao($this->lSqlErro);
+        }        
+        ]]>
       </add>
-    </operation>
+    </operation>  
+            
   </file>
 
 </modification>

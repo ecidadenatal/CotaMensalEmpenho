@@ -84,10 +84,11 @@ switch ($oParam->method) {
         $oRetorno->aCotas    = $aCotasAnu;
       } else {
 
-        $oRetorno->mensagem = "Dados nÃ£o encontrados.";
+        $oRetorno->mensagem = "Dados não encontrados.";
         $oRetorno->aCotas   = null;
       }
       echo $json->encode($oRetorno);
+      exit;
       break;
 
     case 'salvar' :
@@ -140,12 +141,13 @@ switch ($oParam->method) {
         throw new DBException("ERRO [ 1 ] - Incluindo detalhe - " .  $oEmpenhoCotaMensalAnulacao->erro_msg);
       }    
       
-      $oRetorno->mensagem = 'AnulaÃ§Ã£o de Cotas salva com sucesso.';
+      $oRetorno->mensagem = 'Anulação de Cotas salva com sucesso.';
       echo $json->encode($oRetorno);
+      exit;
     break;
   }
 
 $oRetorno->mensagem = urlencode($oRetorno->mensagem);
 echo $oJson->encode($oRetorno);
-
+exit;
 ?>

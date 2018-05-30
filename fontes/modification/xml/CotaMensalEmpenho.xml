@@ -8,12 +8,12 @@
     <operation>
       <search regex="true"><![CDATA[(<input.*id=('|")btnLancarCotasMensais('|").*onclick=('|")manutencaoCotasMensais\(.*\);('|").*>)]]></search>
       <add>
-        <![CDATA[]]>
+        <![CDATA[ ]]>
       </add>
     </operation>
 
     <operation>
-      <search regex="true"><![CDATA[(<table style=\"margin-top: 10px;\">)]]></search>
+      <search regex="true"><![CDATA[(<table style="margin-top: 10px;">)]]></search>
       <add>
         <![CDATA[
        <fieldset>
@@ -450,7 +450,7 @@
     <operation>
       <search regex="true"><![CDATA[(<input.*id="btnLancarCotasMensais".*>)]]></search>
       <add>
-        <![CDATA[]]>
+        <![CDATA[ ]]>
       </add>
     </operation>
   </file>
@@ -578,19 +578,34 @@
             	    	$oEmpenhoCotaMensal = new cl_empenhocotamensal();
             	    	$oEmpenhoCotaMensalAnulacao = new cl_empenhocotamensalanulacao();
             	    
-            	    	//pegar dados da cota mensal
-            	    	$sSqlCotaMensal     = $oEmpenhoCotaMensal->sql_query_file(null, "*", null, "e05_mes = $oCota->mes and e05_numemp = {$this->numemp}");
-            	    	$rsCotaMensal       = db_query($sSqlCotaMensal);
-            	    	$oCotaMensal        = db_utils::fieldsMemory($rsCotaMensal, 0);
-            	    
-            	    	//tentar obter dados de anulacao de cota
-            	    	$sSqlBuscaCotaMensalAnulacao = $oEmpenhoCotaMensalAnulacao->sql_query(null, "*",  null, "e05_sequencial = $oCotaMensal->e05_sequencial");
-            	    	$rsBuscaCotaMensalAnulacao   = $oEmpenhoCotaMensalAnulacao->sql_record($sSqlBuscaCotaMensalAnulacao);
-            	    	$oCotaMensalAnulacao = db_utils::fieldsMemory($rsBuscaCotaMensalAnulacao, 0);
+                        $sSqlTotalLiquidadoAnterior = "select coalesce(sum(e70_vlrliq), 0) 
+                                                  from empnotaele 
+                                                      inner join empnota on e69_codnota = e70_codnota 
+                                                  where e69_numemp = {$this->numemp} and extract(month from e69_dtinclusao) <= ".date('m',db_getsession('DB_datausu'));
+                        
+                        $sSqlTotalLiquidadoMes = "select coalesce(sum(e70_vlrliq), 0) 
+                                                  from empnotaele 
+                                                      inner join empnota on e69_codnota = e70_codnota 
+                                                  where e69_numemp = {$this->numemp} and extract(month from e69_dtinclusao) = e05_mes";
+                                          
+                        $sSqlSaldoAnterior = $oEmpenhoCotaMensalAnulacao->sql_query_geral("(sum(e05_valor) - ($sSqlTotalLiquidadoAnterior) - sum(coalesce(valoranulado, 0)))", "e05_mes <= ".date('m',db_getsession('DB_datausu'))." and e05_numemp = {$this->numemp}");
+                        
+                        $sCampos     = "e05_sequencial, ";
+                        $sCampos    .= "e05_mes,";
+                        $sCampos    .= " e05_valor,";
+                        $sCampos    .= " coalesce(valoranulado, 0) as valoranulado,";
+                        $sCampos    .= " (case 
+                                            when e05_mes < ".date('m',db_getsession('DB_datausu'))." then 0
+                                            when e05_mes = ".date('m',db_getsession('DB_datausu'))." then ($sSqlSaldoAnterior)
+                                            else e05_valor-($sSqlTotalLiquidadoMes)-coalesce(valoranulado, 0) 
+                                          end) as saldocota";
+                        $sSqlCotaAnu = $oEmpenhoCotaMensalAnulacao->sql_query_geral($sCampos, "e05_numemp = $this->numemp and e05_mes = {$oCota->mes}", "e05_mes");
+                        $rsCotasAnu  = $oEmpenhoCotaMensalAnulacao->sql_record($sSqlCotaAnu);
+                        $oCotaMensal = db_utils::fieldsMemory($rsCotasAnu, 0);
             	    
             	    	//verificamos se o valor anulado é maior que o valor da cota
-            	    	$nTotalValorAnulado = $oCotaMensalAnulacao->valoranulado + ((float)$oCota->valor > 0 ? (float)$oCota->valor : 0);
-            	    	if ($nTotalValorAnulado > $oCotaMensal->e05_valor) {
+            	    	$nTotalValorAnulado = ((float)$oCota->valor > 0 ? (float)$oCota->valor : 0);
+            	    	if (round($nTotalValorAnulado,2) > round($oCotaMensal->saldocota,2)) {
             	    		$this->lSqlErro = true;
             	    		$this->sErroMsg = "Não há saldo para anulação na cota de ".db_mes($oCota->mes, 2)." \n\n";
             	    		$this->sErroMsg .= "Cota : ". number_format($oCotaMensal->e05_valor, 2, ",", ".") ."\n"; 
@@ -598,6 +613,11 @@
             	    		$this->sErroMsg .= "Saldo cota: ".number_format(($oCotaMensal->e05_valor - $oCotaMensalAnulacao->valoranulado), 2, ",", ".")."\n";
             	    		break;
             	    	}
+            	    	
+            	    	//tentar obter dados de anulacao de cota
+            	    	$sSqlBuscaCotaMensalAnulacao = $oEmpenhoCotaMensalAnulacao->sql_query(null, "*",  null, "e05_sequencial = $oCotaMensal->e05_sequencial");
+            	    	$rsBuscaCotaMensalAnulacao   = $oEmpenhoCotaMensalAnulacao->sql_record($sSqlBuscaCotaMensalAnulacao);
+            	    	$oCotaMensalAnulacao = db_utils::fieldsMemory($rsBuscaCotaMensalAnulacao, 0);
             	    
             	    	if (!$this->lSqlErro) {
             	    	   //Se já tiver registro, altera. Se nao tiver, insere.
